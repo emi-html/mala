@@ -76,25 +76,64 @@ backToTopButton.addEventListener('click', () => {
     });
 });
 
-// Gallery Lightbox
+// Gallery Lightbox with Navigation
 const galleryImages = document.querySelectorAll('.gallery-img');
 const body = document.body;
 
-function createLightbox(imgSrc, imgAlt) {
+// Store all gallery images data
+const galleryData = Array.from(galleryImages).map(img => ({
+    src: img.src,
+    alt: img.alt
+}));
+
+let currentImageIndex = 0;
+let currentLightbox = null;
+
+function createLightbox(imgIndex) {
+    // Remove existing lightbox if any
+    const existingLightbox = document.querySelector('.lightbox');
+    if (existingLightbox) {
+        document.body.removeChild(existingLightbox);
+    }
+    
+    currentImageIndex = imgIndex;
+    
     // Create lightbox overlay
     const lightbox = document.createElement('div');
     lightbox.className = 'lightbox active';
     lightbox.setAttribute('role', 'dialog');
     lightbox.setAttribute('aria-label', 'Image lightbox');
+    currentLightbox = lightbox;
     
     // Create lightbox content
     const lightboxContent = document.createElement('div');
     lightboxContent.className = 'lightbox-content';
     
+    // Create navigation buttons
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'lightbox-nav lightbox-prev';
+    prevBtn.innerHTML = '&#8249;';
+    prevBtn.setAttribute('aria-label', 'Previous image');
+    if (currentImageIndex === 0) {
+        prevBtn.classList.add('disabled');
+    }
+    
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'lightbox-nav lightbox-next';
+    nextBtn.innerHTML = '&#8250;';
+    nextBtn.setAttribute('aria-label', 'Next image');
+    if (currentImageIndex === galleryData.length - 1) {
+        nextBtn.classList.add('disabled');
+    }
+    
+    // Create image container
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'lightbox-image-container';
+    
     // Create image
     const lightboxImg = document.createElement('img');
-    lightboxImg.src = imgSrc;
-    lightboxImg.alt = imgAlt;
+    lightboxImg.src = galleryData[currentImageIndex].src;
+    lightboxImg.alt = galleryData[currentImageIndex].alt;
     lightboxImg.className = 'lightbox-img';
     
     // Create close button
@@ -106,11 +145,14 @@ function createLightbox(imgSrc, imgAlt) {
     // Create caption
     const caption = document.createElement('div');
     caption.className = 'lightbox-caption';
-    caption.textContent = imgAlt;
+    caption.textContent = `${currentImageIndex + 1} / ${galleryData.length} - ${galleryData[currentImageIndex].alt}`;
     
     // Assemble lightbox
+    imageContainer.appendChild(lightboxImg);
     lightboxContent.appendChild(closeBtn);
-    lightboxContent.appendChild(lightboxImg);
+    lightboxContent.appendChild(prevBtn);
+    lightboxContent.appendChild(nextBtn);
+    lightboxContent.appendChild(imageContainer);
     lightboxContent.appendChild(caption);
     lightbox.appendChild(lightboxContent);
     document.body.appendChild(lightbox);
@@ -118,36 +160,88 @@ function createLightbox(imgSrc, imgAlt) {
     // Prevent body scroll
     body.style.overflow = 'hidden';
     
-    // Close functions
+    // Navigation functions
+    const showNext = () => {
+        if (currentImageIndex < galleryData.length - 1) {
+            currentImageIndex++;
+            updateLightboxImage();
+        }
+    };
+    
+    const showPrev = () => {
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            updateLightboxImage();
+        }
+    };
+    
+    const updateLightboxImage = () => {
+        lightboxImg.src = galleryData[currentImageIndex].src;
+        lightboxImg.alt = galleryData[currentImageIndex].alt;
+        caption.textContent = `${currentImageIndex + 1} / ${galleryData.length} - ${galleryData[currentImageIndex].alt}`;
+        
+        // Update button states
+        prevBtn.classList.toggle('disabled', currentImageIndex === 0);
+        nextBtn.classList.toggle('disabled', currentImageIndex === galleryData.length - 1);
+        
+        // Add fade effect
+        imageContainer.style.opacity = '0';
+        setTimeout(() => {
+            imageContainer.style.opacity = '1';
+        }, 150);
+    };
+    
+    // Keyboard navigation handler
+    const keyboardHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeLightbox();
+        } else if (e.key === 'ArrowRight' && currentImageIndex < galleryData.length - 1) {
+            showNext();
+        } else if (e.key === 'ArrowLeft' && currentImageIndex > 0) {
+            showPrev();
+        }
+    };
+    
+    // Close function
     const closeLightbox = () => {
+        document.removeEventListener('keydown', keyboardHandler);
         lightbox.classList.remove('active');
         setTimeout(() => {
-            document.body.removeChild(lightbox);
+            if (document.body.contains(lightbox)) {
+                document.body.removeChild(lightbox);
+            }
             body.style.overflow = 'auto';
+            currentLightbox = null;
         }, 300);
     };
     
+    // Event listeners
+    nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showNext();
+    });
+    
+    prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showPrev();
+    });
+    
     closeBtn.addEventListener('click', closeLightbox);
+    
     lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox) {
             closeLightbox();
         }
     });
     
-    // Close on Escape key
-    const escapeHandler = (e) => {
-        if (e.key === 'Escape') {
-            closeLightbox();
-            document.removeEventListener('keydown', escapeHandler);
-        }
-    };
-    document.addEventListener('keydown', escapeHandler);
+    // Add keyboard navigation
+    document.addEventListener('keydown', keyboardHandler);
 }
 
 // Add click handlers to gallery images
-galleryImages.forEach(img => {
+galleryImages.forEach((img, index) => {
     img.addEventListener('click', () => {
-        createLightbox(img.src, img.alt);
+        createLightbox(index);
     });
 });
 
