@@ -857,6 +857,66 @@ header {
     font-size: 1.1rem;
 }
 
+.lightbox-image-container {
+    position: relative;
+    transition: opacity 0.3s ease;
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(201, 162, 39, 0.8);
+    color: var(--primary-green);
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10001;
+    font-weight: bold;
+}
+
+.lightbox-nav:hover:not(.disabled) {
+    background: var(--gold-accent);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 5px 15px rgba(201, 162, 39, 0.5);
+}
+
+.lightbox-nav.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.lightbox-prev {
+    left: 20px;
+}
+
+.lightbox-next {
+    right: 20px;
+}
+
+@media (max-width: 768px) {
+    .lightbox-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+    
+    .lightbox-prev {
+        left: 10px;
+    }
+    
+    .lightbox-next {
+        right: 10px;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .hamburger {
@@ -948,3 +1008,4 @@ body.loaded {
 body.loaded {
     opacity: 1;
 }
+
